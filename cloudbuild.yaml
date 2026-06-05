@@ -1,11 +1,23 @@
 steps:
   # Build container
-  - name: "gcr.io/cloud-builders/docker"
-    args: ["build", "-t", "gcr.io/$PROJECT_ID/coresec-app", "."]
+  - name: "gcr.io/cloud-builders/gcloud"
+    entrypoint: bash
+    args:
+      - -c
+      - gcloud auth configure-docker europe-west1-docker.pkg.dev
 
-  # Push to registry
   - name: "gcr.io/cloud-builders/docker"
-    args: ["push", "gcr.io/$PROJECT_ID/coresec-app"]
+    args:
+      - build
+      - -t
+      - europe-west1-docker.pkg.dev/$PROJECT_ID/coresec/coresec-app
+      - .
+
+  # Push to Artifact Registry
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - push
+      - europe-west1-docker.pkg.dev/$PROJECT_ID/coresec/coresec-app
 
   # Deploy to Cloud Run
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
@@ -15,7 +27,7 @@ steps:
       - deploy
       - coresec-app
       - --image
-      - gcr.io/$PROJECT_ID/coresec-app
+      - europe-west1-docker.pkg.dev/$PROJECT_ID/coresec/coresec-app
       - --region
       - europe-west1
       - --platform
@@ -23,7 +35,7 @@ steps:
       - --allow-unauthenticated
 
 images:
-  - gcr.io/$PROJECT_ID/coresec-app
+  - europe-west1-docker.pkg.dev/$PROJECT_ID/coresec/coresec-app
 
 options:
   logging: CLOUD_LOGGING_ONLY
